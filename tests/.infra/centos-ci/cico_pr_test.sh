@@ -50,10 +50,6 @@ stop=$(date +%s)
 instal_dep_duration=$(($stop - $start))
 echo "Installing all dependencies lasted $instal_dep_duration seconds."
 
-scl enable rh-maven33 bash
-
-### DO NOT MERGE!!!
-
 yum install -y qemu-kvm libvirt libvirt-python libguestfs-tools virt-install
 
 curl -L https://github.com/dhiltgen/docker-machine-kvm/releases/download/v0.10.0/docker-machine-driver-kvm-centos7 -o /usr/local/bin/docker-machine-driver-kvm
@@ -106,24 +102,28 @@ CHE_ROUTE=$(oc get route che --template='{{ .spec.host }}')
 
 curl -vL $CHE_ROUTE
 
-  pwd
-  cd ${WORKSPACE}
-  export CHE_INFRASTRUCTURE=openshift
-  export DNS_PROVIDER=nip.io
+pwd
+cd ${WORKSPACE}
+export CHE_INFRASTRUCTURE=openshift
+export DNS_PROVIDER=nip.io
 
-  # configure GitHub test users
-  mkdir -p ${WORKSPACE}/codeready_local_conf_dir
-  export CHE_LOCAL_CONF_DIR=${WORKSPACE}/codeready_local_conf_dir/
-  rm -f ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
-  echo "github.username=che6ocpmulti" >> ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
-  echo "github.password=CheMain2017" >> ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
-  echo "github.auxiliary.username=iedexmain1" >> ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
-  echo "github.auxiliary.password=CodenvyMain15" >> ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
+# configure GitHub test users
+mkdir -p ${WORKSPACE}/codeready_local_conf_dir
+export CHE_LOCAL_CONF_DIR=${WORKSPACE}/codeready_local_conf_dir/
+rm -f ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
+echo "github.username=che6ocpmulti" >> ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
+echo "github.password=CheMain2017" >> ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
+echo "github.auxiliary.username=iedexmain1" >> ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
+echo "github.auxiliary.password=CodenvyMain15" >> ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
 
-  #build selenium module
-  cd ${WORKSPACE}
-  mvn clean install -pl :che-selenium-test -am -DskipTests=true -U
+#build selenium module
+cd ${WORKSPACE}
+scl enable rh-maven33 'mvn clean install -pl :che-selenium-test -am -DskipTests=true -U'
+#mvn clean install -pl :che-selenium-test -am -DskipTests=true -U
 
-  cd tests/legacy-e2e/che-selenium-test
-  bash selenium-tests.sh --host=che-eclipse-che.${CHE_ROUTE} --port=80 --multiuser --test=CreateAndDeleteProjectsTest
+
+scl enable rh-maven33 bash
+
+cd tests/legacy-e2e/che-selenium-test
+bash selenium-tests.sh --host=che-eclipse-che.${CHE_ROUTE} --port=80 --multiuser --test=CreateAndDeleteProjectsTest
 
