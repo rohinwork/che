@@ -99,9 +99,7 @@ else
 fi
 
 CHE_ROUTE=$(oc get route che --template='{{ .spec.host }}')
-
-curl -vL $CHE_ROUTE
-
+#curl -vL $CHE_ROUTE
 
 set +x
 pwd
@@ -122,9 +120,6 @@ export DNS_PROVIDER=nip.io
 #cd ${WORKSPACE}
 scl enable rh-maven33 'mvn clean install -pl :che-selenium-test -am -DskipTests=true -U'
 #mvn clean install -pl :che-selenium-test -am -DskipTests=true -U
-
-
-scl enable rh-maven33 bash
 
 cd tests/legacy-e2e/che-selenium-test
 bash selenium-tests.sh --host=che-eclipse-che.${CHE_ROUTE} --port=80 --multiuser --test=CreateAndDeleteProjectsTest
