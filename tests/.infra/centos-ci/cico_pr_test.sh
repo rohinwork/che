@@ -102,22 +102,24 @@ CHE_ROUTE=$(oc get route che --template='{{ .spec.host }}')
 
 curl -vL $CHE_ROUTE
 
+
+set +x
 pwd
-cd ${WORKSPACE}
+echo ${WORKSPACE} || true
 export CHE_INFRASTRUCTURE=openshift
 export DNS_PROVIDER=nip.io
 
 # configure GitHub test users
-mkdir -p ${WORKSPACE}/codeready_local_conf_dir
-export CHE_LOCAL_CONF_DIR=${WORKSPACE}/codeready_local_conf_dir/
-rm -f ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
-echo "github.username=che6ocpmulti" >> ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
-echo "github.password=CheMain2017" >> ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
-echo "github.auxiliary.username=iedexmain1" >> ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
-echo "github.auxiliary.password=CodenvyMain15" >> ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
+#mkdir -p ${WORKSPACE}/codeready_local_conf_dir
+#export CHE_LOCAL_CONF_DIR=${WORKSPACE}/codeready_local_conf_dir/
+#rm -f ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
+#echo "github.username=che6ocpmulti" >> ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
+#echo "github.password=CheMain2017" >> ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
+#echo "github.auxiliary.username=iedexmain1" >> ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
+#echo "github.auxiliary.password=CodenvyMain15" >> ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
 
 #build selenium module
-cd ${WORKSPACE}
+#cd ${WORKSPACE}
 scl enable rh-maven33 'mvn clean install -pl :che-selenium-test -am -DskipTests=true -U'
 #mvn clean install -pl :che-selenium-test -am -DskipTests=true -U
 
