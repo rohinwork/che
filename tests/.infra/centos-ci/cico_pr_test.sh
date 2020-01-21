@@ -39,7 +39,7 @@ export DEV_CLUSTER_URL=https://devtools-dev.ext.devshift.net:8443/
 source tests/.infra/centos-ci/functional_tests_utils.sh
 
 echo "Checking credentials:"
-checkAllCreds
+#checkAllCreds
 
 echo "Installing dependencies:"
 start=$(date +%s)
