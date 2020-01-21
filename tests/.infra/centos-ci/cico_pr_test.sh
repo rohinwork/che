@@ -126,3 +126,4 @@ curl -vL $CHE_ROUTE
 
   cd tests/legacy-e2e/che-selenium-test
   bash selenium-tests.sh --host=che-eclipse-che.${CHE_ROUTE} --port=80 --multiuser --test=CreateAndDeleteProjectsTest
+
