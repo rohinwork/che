@@ -7,7 +7,7 @@
 
 function archiveArtifacts1(){
   set +e
-  set +x
+
   JOB_NAME=che-nightly
   echo "Archiving artifacts from ${DATE} for ${JOB_NAME}/${BUILD_NUMBER}"
   ls -la ./artifacts.key
@@ -20,6 +20,7 @@ function archiveArtifacts1(){
 }
 
 set -e
+set +x
 
 echo "****** Starting RH-Che PR check $(date) ******"
 
@@ -45,6 +46,8 @@ installDependencies
 stop=$(date +%s)
 instal_dep_duration=$(($stop - $start))
 echo "Installing all dependencies lasted $instal_dep_duration seconds."
+
+scl enable rh-maven35 bash
 
 ### DO NOT MERGE!!!
 
