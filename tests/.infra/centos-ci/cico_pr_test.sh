@@ -50,7 +50,7 @@ stop=$(date +%s)
 instal_dep_duration=$(($stop - $start))
 echo "Installing all dependencies lasted $instal_dep_duration seconds."
 
-scl enable rh-maven35 bash
+scl enable rh-maven33 bash
 
 ### DO NOT MERGE!!!
 
