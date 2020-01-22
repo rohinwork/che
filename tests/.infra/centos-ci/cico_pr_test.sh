@@ -135,5 +135,5 @@ export DNS_PROVIDER=nip.io
 mvn clean install -pl :che-selenium-test -am -DskipTests=true -U
 
 cd tests/legacy-e2e/che-selenium-test
-bash selenium-tests.sh --host=che-eclipse-che.${CHE_ROUTE} --port=80 --multiuser --test=CreateAndDeleteProjectsTest
+bash selenium-tests.sh --host=${CHE_ROUTE} --port=80 --multiuser --test=CreateAndDeleteProjectsTest
 
