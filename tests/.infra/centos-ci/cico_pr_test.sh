@@ -50,6 +50,8 @@ stop=$(date +%s)
 instal_dep_duration=$(($stop - $start))
 
 yum install --assumeyes -d1 maven
+mvn --version
+
 echo "Installing all dependencies lasted $instal_dep_duration seconds."
 
 yum install -y qemu-kvm libvirt libvirt-python libguestfs-tools virt-install
