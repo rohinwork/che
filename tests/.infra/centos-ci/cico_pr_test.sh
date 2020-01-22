@@ -59,79 +59,79 @@ export JAVA_HOME=/usr/
 
 mvn --version
 
-#echo "Installing all dependencies lasted $instal_dep_duration seconds."
-#
-#yum install -y qemu-kvm libvirt libvirt-python libguestfs-tools virt-install
-#
-#curl -L https://github.com/dhiltgen/docker-machine-kvm/releases/download/v0.10.0/docker-machine-driver-kvm-centos7 -o /usr/local/bin/docker-machine-driver-kvm
-#chmod +x /usr/local/bin/docker-machine-driver-kvm
-#
-#systemctl enable libvirtd
-#systemctl start libvirtd
-#
-#virsh net-list --all
-#
-#curl -Lo minishift.tgz https://github.com/minishift/minishift/releases/download/v1.34.2/minishift-1.34.2-linux-amd64.tgz
-#tar -xvf minishift.tgz --strip-components=1
-#chmod +x ./minishift
-#mv ./minishift /usr/local/bin/minishift
-#
-#minishift version
-#minishift config set memory 14GB
-#minishift config set cpus 4
-#minishift start
-#
-#oc login -u system:admin
-#oc adm policy add-cluster-role-to-user cluster-admin developer
-#oc login -u developer -p pass
-#
-#bash <(curl -sL  https://www.eclipse.org/che/chectl/) --channel=next
-#
-#echo "====Replace CRD===="
-#curl -o org_v1_che_crd.yaml https://raw.githubusercontent.com/eclipse/che-operator/63402ddb5b6ed31c18b397cb477906b4b5cf7c22/deploy/crds/org_v1_che_crd.yaml
-#cp org_v1_che_crd.yaml /usr/local/lib/chectl/templates/che-operator/crds/
-#
-#if chectl server:start -a operator -p openshift --k8spodreadytimeout=360000 --listr-renderer=verbose
-#then
-#        echo "Started succesfully"
-#else
-#        echo "==== oc get events ===="
-#        oc get events
-#        echo "==== oc get all ===="
-#        oc get all
-#        # echo "==== docker ps ===="
-#        # docker ps
-#        # echo "==== docker ps -q | xargs -L 1 docker logs ===="
-#        # docker ps -q | xargs -L 1 docker logs | true
-#        oc logs $(oc get pods --selector=component=che -o jsonpath="{.items[].metadata.name}") || true
-#        oc logs $(oc get pods --selector=component=keycloak -o jsonpath="{.items[].metadata.name}") || true
-#        curl -vL http://keycloak-che.${LOCAL_IP_ADDRESS}.nip.io/auth/realms/che/.well-known/openid-configuration
-#        exit 1337
-#fi
-#
-#CHE_ROUTE=$(oc get route che --template='{{ .spec.host }}')
-##curl -vL $CHE_ROUTE
-#
-#set +x
-#pwd
-#echo ${WORKSPACE} || true
-#export CHE_INFRASTRUCTURE=openshift
-#export DNS_PROVIDER=nip.io
-#
-## configure GitHub test users
-##mkdir -p ${WORKSPACE}/codeready_local_conf_dir
-##export CHE_LOCAL_CONF_DIR=${WORKSPACE}/codeready_local_conf_dir/
-##rm -f ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
-##echo "github.username=che6ocpmulti" >> ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
-##echo "github.password=CheMain2017" >> ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
-##echo "github.auxiliary.username=iedexmain1" >> ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
-##echo "github.auxiliary.password=CodenvyMain15" >> ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
-#
-##build selenium module
-##cd ${WORKSPACE}
+echo "Installing all dependencies lasted $instal_dep_duration seconds."
+
+yum install -y qemu-kvm libvirt libvirt-python libguestfs-tools virt-install
+
+curl -L https://github.com/dhiltgen/docker-machine-kvm/releases/download/v0.10.0/docker-machine-driver-kvm-centos7 -o /usr/local/bin/docker-machine-driver-kvm
+chmod +x /usr/local/bin/docker-machine-driver-kvm
+
+systemctl enable libvirtd
+systemctl start libvirtd
+
+virsh net-list --all
+
+curl -Lo minishift.tgz https://github.com/minishift/minishift/releases/download/v1.34.2/minishift-1.34.2-linux-amd64.tgz
+tar -xvf minishift.tgz --strip-components=1
+chmod +x ./minishift
+mv ./minishift /usr/local/bin/minishift
+
+minishift version
+minishift config set memory 14GB
+minishift config set cpus 4
+minishift start
+
+oc login -u system:admin
+oc adm policy add-cluster-role-to-user cluster-admin developer
+oc login -u developer -p pass
+
+bash <(curl -sL  https://www.eclipse.org/che/chectl/) --channel=next
+
+echo "====Replace CRD===="
+curl -o org_v1_che_crd.yaml https://raw.githubusercontent.com/eclipse/che-operator/63402ddb5b6ed31c18b397cb477906b4b5cf7c22/deploy/crds/org_v1_che_crd.yaml
+cp org_v1_che_crd.yaml /usr/local/lib/chectl/templates/che-operator/crds/
+
+if chectl server:start -a operator -p openshift --k8spodreadytimeout=360000 --listr-renderer=verbose
+then
+        echo "Started succesfully"
+else
+        echo "==== oc get events ===="
+        oc get events
+        echo "==== oc get all ===="
+        oc get all
+        # echo "==== docker ps ===="
+        # docker ps
+        # echo "==== docker ps -q | xargs -L 1 docker logs ===="
+        # docker ps -q | xargs -L 1 docker logs | true
+        oc logs $(oc get pods --selector=component=che -o jsonpath="{.items[].metadata.name}") || true
+        oc logs $(oc get pods --selector=component=keycloak -o jsonpath="{.items[].metadata.name}") || true
+        curl -vL http://keycloak-che.${LOCAL_IP_ADDRESS}.nip.io/auth/realms/che/.well-known/openid-configuration
+        exit 1337
+fi
+
+CHE_ROUTE=$(oc get route che --template='{{ .spec.host }}')
+#curl -vL $CHE_ROUTE
+
+set +x
+pwd
+echo ${WORKSPACE} || true
+export CHE_INFRASTRUCTURE=openshift
+export DNS_PROVIDER=nip.io
+
+# configure GitHub test users
+#mkdir -p ${WORKSPACE}/codeready_local_conf_dir
+#export CHE_LOCAL_CONF_DIR=${WORKSPACE}/codeready_local_conf_dir/
+#rm -f ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
+#echo "github.username=che6ocpmulti" >> ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
+#echo "github.password=CheMain2017" >> ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
+#echo "github.auxiliary.username=iedexmain1" >> ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
+#echo "github.auxiliary.password=CodenvyMain15" >> ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
+
+#build selenium module
+#cd ${WORKSPACE}
 #scl enable rh-maven33 'mvn clean install -pl :che-selenium-test -am -DskipTests=true -U'
-##mvn clean install -pl :che-selenium-test -am -DskipTests=true -U
-#
-#cd tests/legacy-e2e/che-selenium-test
-#bash selenium-tests.sh --host=che-eclipse-che.${CHE_ROUTE} --port=80 --multiuser --test=CreateAndDeleteProjectsTest
+mvn clean install -pl :che-selenium-test -am -DskipTests=true -U
+
+cd tests/legacy-e2e/che-selenium-test
+bash selenium-tests.sh --host=che-eclipse-che.${CHE_ROUTE} --port=80 --multiuser --test=CreateAndDeleteProjectsTest
 
