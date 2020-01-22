@@ -178,115 +178,68 @@ function loginToOpenshiftAndSetDevRople() {
   oc login -u developer -p pass
 }
 
-function archiveArtifacts() {
-  set +e
+function archiveArtifacts1() {
+  JOB_NAME=che-nightly
+  DATE=$(date +"%m-%d-%Y-%H-%M")
   echo "Archiving artifacts from ${DATE} for ${JOB_NAME}/${BUILD_NUMBER}"
   ls -la ./artifacts.key
   chmod 600 ./artifacts.key
   chown $(whoami) ./artifacts.key
-  mkdir -p ./rhche/${JOB_NAME}/${BUILD_NUMBER}/surefire-reports
-  cp ./logs/*.log ./rhche/${JOB_NAME}/${BUILD_NUMBER}/ | true
-  cp -R ./logs/artifacts/screenshots/ ./rhche/${JOB_NAME}/${BUILD_NUMBER}/ | true
-  cp -R ./logs/artifacts/failsafe-reports/ ./rhche/${JOB_NAME}/${BUILD_NUMBER}/ | true
-  cp ./events_report.txt ./rhche/${JOB_NAME}/${BUILD_NUMBER}/ | true
-  rsync --password-file=./artifacts.key -Hva --partial --relative ./rhche/${JOB_NAME}/${BUILD_NUMBER} devtools@artifacts.ci.centos.org::devtools/
-  set -e
+  mkdir -p ./che/${JOB_NAME}/${BUILD_NUMBER}
+  cp -R ./report ./che/${JOB_NAME}/${BUILD_NUMBER}/ | true
+  rsync --password-file=./artifacts.key -Hva --partial --relative ./che/${JOB_NAME}/${BUILD_NUMBER} devtools@artifacts.ci.centos.org::devtools/
+}
+
+createTestWorkspaceAndRunTest() {
+### Create workspace
+chectl workspace:start --access-token "$USER_ACCESS_TOKEN" -f https://raw.githubusercontent.com/eclipse/che/master/tests/e2e/files/happy-path/happy-path-workspace.yaml
+
+### Create directory for report
+mkdir report
+REPORT_FOLDER=$(pwd)/report
+### Run tests
+docker run --shm-size=256m --network host -v $REPORT_FOLDER:/tmp/e2e/report:Z -e TS_SELENIUM_BASE_URL="http://$CHE_ROUTE" -e TS_SELENIUM_MULTIUSER="true" -e TS_SELENIUM_USERNAME="${TEST_USERNAME}" -e TS_SELENIUM_PASSWORD="${TEST_USERNAME}" -e TS_SELENIUM_LOAD_PAGE_TIMEOUT=420000 quay.io/eclipse/che-e2e:nightly
 }
 
 function createTestUserAndObtainUserToken() {
 
-### Create user and obtain token
-KEYCLOAK_URL=$(oc get route/keycloak -o jsonpath='{.spec.host}')
-KEYCLOAK_BASE_URL="http://${KEYCLOAK_URL}/auth"
+  ### Create user and obtain token
+  KEYCLOAK_URL=$(oc get route/keycloak -o jsonpath='{.spec.host}')
+  KEYCLOAK_BASE_URL="http://${KEYCLOAK_URL}/auth"
 
-ADMIN_USERNAME=admin
-ADMIN_PASS=admin
-TEST_USERNAME=testUser1
+  ADMIN_USERNAME=admin
+  ADMIN_PASS=admin
+  TEST_USERNAME=testUser1
 
-echo "======== Getting admin token ========"
-ADMIN_ACCESS_TOKEN=$(curl -X POST $KEYCLOAK_BASE_URL/realms/master/protocol/openid-connect/token -H "Content-Type: application/x-www-form-urlencoded" -d "username=admin" -d "password=admin" -d "grant_type=password" -d "client_id=admin-cli" | jq -r .access_token)
-echo $ADMIN_ACCESS_TOKEN
+  echo "======== Getting admin token ========"
+  ADMIN_ACCESS_TOKEN=$(curl -X POST $KEYCLOAK_BASE_URL/realms/master/protocol/openid-connect/token -H "Content-Type: application/x-www-form-urlencoded" -d "username=admin" -d "password=admin" -d "grant_type=password" -d "client_id=admin-cli" | jq -r .access_token)
+  echo $ADMIN_ACCESS_TOKEN
 
-echo "========Creating user========"
-USER_JSON="{\"username\": \"${TEST_USERNAME}\",\"enabled\": true,\"emailVerified\": true,\"email\":\"test1@user.aa\"}"
-echo $USER_JSON
+  echo "========Creating user========"
+  USER_JSON="{\"username\": \"${TEST_USERNAME}\",\"enabled\": true,\"emailVerified\": true,\"email\":\"test1@user.aa\"}"
+  echo $USER_JSON
 
-curl -X POST $KEYCLOAK_BASE_URL/admin/realms/che/users -H "Authorization: Bearer ${ADMIN_ACCESS_TOKEN}" -H "Content-Type: application/json" -d "${USER_JSON}" -v
-USER_ID=$(curl -X GET $KEYCLOAK_BASE_URL/admin/realms/che/users?username=${TEST_USERNAME} -H "Authorization: Bearer ${ADMIN_ACCESS_TOKEN}" | jq -r .[0].id)
-echo "========User id: $USER_ID========"
+  curl -X POST $KEYCLOAK_BASE_URL/admin/realms/che/users -H "Authorization: Bearer ${ADMIN_ACCESS_TOKEN}" -H "Content-Type: application/json" -d "${USER_JSON}" -v
+  USER_ID=$(curl -X GET $KEYCLOAK_BASE_URL/admin/realms/che/users?username=${TEST_USERNAME} -H "Authorization: Bearer ${ADMIN_ACCESS_TOKEN}" | jq -r .[0].id)
+  echo "========User id: $USER_ID========"
 
-echo "========Updating password========"
-CREDENTIALS_JSON={\"type\":\"password\",\"value\":\"${TEST_USERNAME}\",\"temporary\":false}
-echo $CREDENTIALS_JSON
+  echo "========Updating password========"
+  CREDENTIALS_JSON={\"type\":\"password\",\"value\":\"${TEST_USERNAME}\",\"temporary\":false}
+  echo $CREDENTIALS_JSON
 
-curl -X PUT $KEYCLOAK_BASE_URL/admin/realms/che/users/${USER_ID}/reset-password -H "Authorization: Bearer ${ADMIN_ACCESS_TOKEN}" -H "Content-Type: application/json" -d "${CREDENTIALS_JSON}" -v
-export USER_ACCESS_TOKEN=$(curl -X POST $KEYCLOAK_BASE_URL/realms/che/protocol/openid-connect/token -H "Content-Type: application/x-www-form-urlencoded" -d "username=${TEST_USERNAME}" -d "password=${TEST_USERNAME}" -d "grant_type=password" -d "client_id=che-public" | jq -r .access_token)
-echo "========User Access Token: $USER_ACCESS_TOKEN "
+  curl -X PUT $KEYCLOAK_BASE_URL/admin/realms/che/users/${USER_ID}/reset-password -H "Authorization: Bearer ${ADMIN_ACCESS_TOKEN}" -H "Content-Type: application/json" -d "${CREDENTIALS_JSON}" -v
+  export USER_ACCESS_TOKEN=$(curl -X POST $KEYCLOAK_BASE_URL/realms/che/protocol/openid-connect/token -H "Content-Type: application/x-www-form-urlencoded" -d "username=${TEST_USERNAME}" -d "password=${TEST_USERNAME}" -d "grant_type=password" -d "client_id=che-public" | jq -r .access_token)
+  echo "========User Access Token: $USER_ACCESS_TOKEN "
 }
 
-function getVersionFromPom() {
-  version=$(scl enable rh-maven33 "mvn -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn org.apache.maven.plugins:maven-help-plugin:evaluate -q -Dexpression=project.parent.version -DforceStdout")
-  echo $version
-}
-
-function getActiveToken() {
-  rm -rf cookie-file loginfile.html
-  if [[ "$USERNAME" == *"preview"* ]] || [[ "$USERNAME" == *"saas"* ]]; then
-    preview="prod-preview."
-  else
-    preview=""
-  fi
-
-  response=$(curl -s -g -X GET --header 'Accept: application/json' "https://api.${preview}openshift.io/api/users?filter[username]=$USERNAME")
-  data=$(echo "$response" | jq .data)
-  if [ "$data" == "[]" ]; then
-    exit 1
-  fi
-
-  #get html of developers login page
-  curl -sX GET -L -c cookie-file -b cookie-file "https://auth.${preview}openshift.io/api/login?redirect=https://che.openshift.io" >loginfile.html
-
-  #get url for login from form
-  url=$(grep "form id" loginfile.html | grep -o 'http.*.tab_id=.[^\"]*')
-  dataUrl="username=$USERNAME&password=$PASSWORD&login=Log+in"
-  url=${url//\&amp;/\&}
-
-  #send login and follow redirects
-  set +e
-  url=$(curl -w '%{redirect_url}' -s -X POST -c cookie-file -b cookie-file -d "$dataUrl" "$url")
-  found=$(echo "$url" | grep "token_json")
-
-  while true; do
-    url=$(curl -c cookie-file -b cookie-file -s -o /dev/null -w '%{redirect_url}' "$url")
-    if [[ ${#url} == 0 ]]; then
-      #all redirects were done but token was not found
-      break
-    fi
-    found=$(echo "$url" | grep "token_json")
-    if [[ ${#found} -gt 0 ]]; then
-      #some redirects were done and token was found as a part of url
-      break
-    fi
-  done
-  set -e
-
-  #extract active token
-  token=$(echo "$url" | grep -o "ey.[^%]*" | head -1)
-  if [[ ${#token} -gt 0 ]]; then
-    echo ${token}
-  else
-    exit 1
-  fi
-}
-
-function getVersionFromProdPreview() {
-  token=$(getActiveToken)
-  version=$(curl -s -X OPTIONS --header "Content-Type: application/json" --header "Authorization: Bearer ${token}" https://che.prod-preview.openshift.io/api/ | jq '.buildInfo')
-  echo ${version//\"/}
-}
-
-function getVersionFromProd() {
-  token=$(getActiveToken)
-  version=$(curl -s -X OPTIONS --header "Content-Type: application/json" --header "Authorization: Bearer ${token}" https://che.openshift.io/api/ | jq '.buildInfo')
-  echo ${version//\"/}
+function setupEnvs() {
+  eval "$(./env-toolkit load -f jenkins-env.json -r \
+    CHE_BOT_GITHUB_TOKEN \
+    CHE_MAVEN_SETTINGS \
+    CHE_GITHUB_SSH_KEY \
+    ^BUILD_NUMBER$ \
+    CHE_OSS_SONATYPE_GPG_KEY \
+    CHE_OSS_SONATYPE_PASSPHRASE \
+    QUAY_ECLIPSE_CHE_USERNAME \
+    QUAY_ECLIPSE_CHE_PASSWORD)"
 }
