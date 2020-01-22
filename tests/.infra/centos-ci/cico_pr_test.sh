@@ -87,23 +87,8 @@ bash <(curl -sL  https://www.eclipse.org/che/chectl/) --channel=next
 #curl -o org_v1_che_crd.yaml https://raw.githubusercontent.com/eclipse/che-operator/63402ddb5b6ed31c18b397cb477906b4b5cf7c22/deploy/crds/org_v1_che_crd.yaml
 #cp org_v1_che_crd.yaml /usr/local/lib/chectl/templates/che-operator/crds/
 
-if chectl server:start -a operator -p openshift --k8spodreadytimeout=360000 --listr-renderer=verbose
-then
-        echo "Started succesfully"
-else
-        echo "==== oc get events ===="
-        oc get events
-        echo "==== oc get all ===="
-        oc get all
-        # echo "==== docker ps ===="
-        # docker ps
-        # echo "==== docker ps -q | xargs -L 1 docker logs ===="
-        # docker ps -q | xargs -L 1 docker logs | true
-        oc logs $(oc get pods --selector=component=che -o jsonpath="{.items[].metadata.name}") || true
-        oc logs $(oc get pods --selector=component=keycloak -o jsonpath="{.items[].metadata.name}") || true
-        curl -vL http://keycloak-che.${LOCAL_IP_ADDRESS}.nip.io/auth/realms/che/.well-known/openid-configuration
-        exit 1337
-fi
+echo "Deploy Eclipse Che"
+chectl server:start -a operator -p openshift --k8spodreadytimeout=360000 --listr-renderer=verbose --chenamespace=eclipse-che
 
 CHE_ROUTE=$(oc get route che --template='{{ .spec.host }}')
 curl -vL $CHE_ROUTE
@@ -112,8 +97,9 @@ echo "Start selenium tests"
 
 set +x
 export CHE_INFRASTRUCTURE=openshift
+export OC_BINARY_DOWNLOAD_URL=https://github.com/openshift/origin/releases/download/v3.11.0/openshift-origin-client-tools-v3.11.0-0cbc58b-linux-64bit.tar.gz
 
-# configure GitHub test users
+echo "Configure GitHub test users"
 mkdir -p codeready_local_conf_dir
 export CHE_LOCAL_CONF_DIR=codeready_local_conf_dir/
 rm -f codeready_local_conf_dir/selenium.properties
