@@ -8,7 +8,7 @@
 function archiveArtifacts1(){
   set +e
 
-  JOB_NAME=che-nightly
+  JOB_NAME=che-pullrequests-test-temporary
   echo "Archiving artifacts from ${DATE} for ${JOB_NAME}/${BUILD_NUMBER}"
   ls -la ./artifacts.key
   chmod 600 ./artifacts.key
@@ -97,7 +97,6 @@ echo "Start selenium tests"
 
 set +x
 export CHE_INFRASTRUCTURE=openshift
-export OC_BINARY_DOWNLOAD_URL=https://github.com/openshift/origin/releases/download/v3.11.0/openshift-origin-client-tools-v3.11.0-0cbc58b-linux-64bit.tar.gz
 
 echo "Configure GitHub test users"
 mkdir -p codeready_local_conf_dir
@@ -112,4 +111,4 @@ echo "github.auxiliary.password=CodenvyMain15" >> codeready_local_conf_dir/selen
 mvn clean install -pl :che-selenium-test -am -DskipTests=true -U
 
 cd tests/legacy-e2e/che-selenium-test
-bash selenium-tests.sh --host=${CHE_ROUTE} --port=80 --multiuser --test=CreateAndDeleteProjectsTest
+bash selenium-tests.sh --threads=5 --host=${CHE_ROUTE} --port=80 --multiuser
