@@ -40,17 +40,13 @@ export DEV_CLUSTER_URL=https://devtools-dev.ext.devshift.net:8443/
 
 source tests/.infra/centos-ci/functional_tests_utils.sh
 
-pwd
-ls -als
-
 echo "Installing dependencies:"
 start=$(date +%s)
 installDependencies
 stop=$(date +%s)
 instal_dep_duration=$(($stop - $start))
 
-env
-
+echo "Install maven"
 curl -L http://mirrors.ukfast.co.uk/sites/ftp.apache.org/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz | tar -C /opt -xzv
 export M2_HOME=/opt/apache-maven-3.3.9
 export M2=$M2_HOME/bin
@@ -58,26 +54,24 @@ export PATH=$M2:$PATH
 export JAVA_HOME=/usr/
 mvn --version
 
+echo "Install docker compose"
 sudo curl -L "https://github.com/docker/compose/releases/download/1.25.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose
 
 echo "Installing all dependencies lasted $instal_dep_duration seconds."
 
 yum install -y qemu-kvm libvirt libvirt-python libguestfs-tools virt-install
-
 curl -L https://github.com/dhiltgen/docker-machine-kvm/releases/download/v0.10.0/docker-machine-driver-kvm-centos7 -o /usr/local/bin/docker-machine-driver-kvm
 chmod +x /usr/local/bin/docker-machine-driver-kvm
-
 systemctl enable libvirtd
 systemctl start libvirtd
 
-virsh net-list --all
+#virsh net-list --all
 
 curl -Lo minishift.tgz https://github.com/minishift/minishift/releases/download/v1.34.2/minishift-1.34.2-linux-amd64.tgz
 tar -xvf minishift.tgz --strip-components=1
 chmod +x ./minishift
 mv ./minishift /usr/local/bin/minishift
-
 minishift version
 minishift config set memory 14GB
 minishift config set cpus 4
@@ -89,9 +83,9 @@ oc login -u developer -p pass
 
 bash <(curl -sL  https://www.eclipse.org/che/chectl/) --channel=next
 
-echo "====Replace CRD===="
-curl -o org_v1_che_crd.yaml https://raw.githubusercontent.com/eclipse/che-operator/63402ddb5b6ed31c18b397cb477906b4b5cf7c22/deploy/crds/org_v1_che_crd.yaml
-cp org_v1_che_crd.yaml /usr/local/lib/chectl/templates/che-operator/crds/
+#echo "====Replace CRD===="
+#curl -o org_v1_che_crd.yaml https://raw.githubusercontent.com/eclipse/che-operator/63402ddb5b6ed31c18b397cb477906b4b5cf7c22/deploy/crds/org_v1_che_crd.yaml
+#cp org_v1_che_crd.yaml /usr/local/lib/chectl/templates/che-operator/crds/
 
 if chectl server:start -a operator -p openshift --k8spodreadytimeout=360000 --listr-renderer=verbose
 then
@@ -112,26 +106,23 @@ else
 fi
 
 CHE_ROUTE=$(oc get route che --template='{{ .spec.host }}')
-#curl -vL $CHE_ROUTE
+curl -vL $CHE_ROUTE
+
+echo "Start selenium tests"
 
 set +x
-pwd
-echo ${WORKSPACE} || true
 export CHE_INFRASTRUCTURE=openshift
-export DNS_PROVIDER=nip.io
 
 # configure GitHub test users
-#mkdir -p ${WORKSPACE}/codeready_local_conf_dir
-#export CHE_LOCAL_CONF_DIR=${WORKSPACE}/codeready_local_conf_dir/
-#rm -f ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
-#echo "github.username=che6ocpmulti" >> ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
-#echo "github.password=CheMain2017" >> ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
-#echo "github.auxiliary.username=iedexmain1" >> ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
-#echo "github.auxiliary.password=CodenvyMain15" >> ${WORKSPACE}/codeready_local_conf_dir/selenium.properties
+mkdir -p codeready_local_conf_dir
+export CHE_LOCAL_CONF_DIR=codeready_local_conf_dir/
+rm -f codeready_local_conf_dir/selenium.properties
+echo "github.username=che6ocpmulti" >> codeready_local_conf_dir/selenium.properties
+echo "github.password=CheMain2017" >> codeready_local_conf_dir/selenium.properties
+echo "github.auxiliary.username=iedexmain1" >> codeready_local_conf_dir/selenium.properties
+echo "github.auxiliary.password=CodenvyMain15" >> codeready_local_conf_dir/selenium.properties
 
 #build selenium module
-#cd ${WORKSPACE}
-#scl enable rh-maven33 'mvn clean install -pl :che-selenium-test -am -DskipTests=true -U'
 mvn clean install -pl :che-selenium-test -am -DskipTests=true -U
 
 cd tests/legacy-e2e/che-selenium-test
