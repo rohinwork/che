@@ -56,8 +56,10 @@ export M2_HOME=/opt/apache-maven-3.3.9
 export M2=$M2_HOME/bin
 export PATH=$M2:$PATH
 export JAVA_HOME=/usr/
-
 mvn --version
+
+sudo curl -L "https://github.com/docker/compose/releases/download/1.25.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
 
 echo "Installing all dependencies lasted $instal_dep_duration seconds."
 
