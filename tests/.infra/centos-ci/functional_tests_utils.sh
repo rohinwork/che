@@ -178,7 +178,7 @@ function loginToOpenshiftAndSetDevRople() {
   oc login -u developer -p pass
 }
 
-function archiveArtifacts1() {
+function archiveArtifacts() {
   JOB_NAME=che-nightly
   DATE=$(date +"%m-%d-%Y-%H-%M")
   echo "Archiving artifacts from ${DATE} for ${JOB_NAME}/${BUILD_NUMBER}"
@@ -191,6 +191,11 @@ function archiveArtifacts1() {
 }
 
 createTestWorkspaceAndRunTest() {
+CHE_ROUTE=$(oc get route che --template='{{ .spec.host }}')
+
+echo "====== Check CHE ROUTE ======" 
+curl -vL $CHE_ROUTE
+
 ### Create workspace
 chectl workspace:start --access-token "$USER_ACCESS_TOKEN" -f https://raw.githubusercontent.com/eclipse/che/master/tests/e2e/files/happy-path/happy-path-workspace.yaml
 
